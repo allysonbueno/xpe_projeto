@@ -3,3 +3,5 @@ logs/
 *.pyc
 .vscode
 help.txt
+creds.env
+airflow_env
