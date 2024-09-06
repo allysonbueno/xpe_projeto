@@ -1,0 +1,5 @@
+main.py
+logs/
+*.pyc
+.vscode
+help.txt
