@@ -24,9 +24,6 @@ class Global_Indexes:
 
     def __get_global_indexes(self):
         temp_table_name = 'temp_global_indexes'
-        sb = SupaBase()
-        sb.truncate_table(temp_table_name)
-
         json_data = self.request_rapid_api()
         
         print('....Data Transformation')
@@ -41,8 +38,8 @@ class Global_Indexes:
         df['created_date'] = pd.Timestamp.now()
         df['created_date'] = df['created_date'].astype(str)
         if not df.empty:
-            inserted_data = sb.insert_df_to_supabase(df, temp_table_name)
-            print("Inserted Data:", inserted_data)
+            sb = SupaBase()
+            sb.insert_df_to_supabase(df, temp_table_name)
 
     def get_global_indexes(self):        
         self.__get_global_indexes()

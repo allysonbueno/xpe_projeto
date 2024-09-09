@@ -26,19 +26,38 @@ class SupaBase:
             print(f"An error occurred: {e}")
 
     def insert_df_to_supabase(self, df: pd.DataFrame, table_name: str):
+        print('....Inserting data into SUPABASE')
         data_to_insert = df.to_dict(orient='records')        
         response = self.supabase.table(table_name).insert(data_to_insert).execute()
         return response.data
 
-
-    # def insert_df_to_supabase(self, df: pd.DataFrame, table_name: str):
-    #     print(df)
-
-    #     data = df.to_dict(orient='records')
-    #     print(data)
-        
-    #     supabase: Client = create_client(self.supabase_url, self.supabase_key)
-    #     response = supabase.table(table_name).insert(data).execute()
-    #     print("Supabase Response:", response)
-        
-    #     return response.data
+    def upsert_global_indexes(self):
+        query = """
+        insert into
+            global_indexes (
+                country,
+                current_rate,
+                previous_rate,
+                date,
+                created_date
+            )
+            select
+            country,
+            current_rate,
+            previous_rate,
+            date,
+            created_date
+            from
+            temp_global_indexes
+            on conflict (country, date) do
+            update
+            set
+            current_rate = excluded.current_rate,
+            previous_rate = excluded.previous_rate,
+            created_date = excluded.created_date;
+        """
+        try:
+            response = self.supabase.rpc("execute_sql", {"query": query}).execute()
+            print(f'Response: {response.data}')
+        except Exception as e:
+            print(f"An error occurred: {e}")
