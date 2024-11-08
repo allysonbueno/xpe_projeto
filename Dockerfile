@@ -23,6 +23,8 @@ RUN pip install apache-airflow-providers-postgres
 USER root
 # Set permissions on DAGs directory (replace * with actual subdirectories if needed)
 RUN chmod -R 755 /opt/airflow/dags
+RUN chmod -R 755 /opt/airflow/logs
+RUN chmod -R 755 /opt/airflow/plugins
 
 # Create the airflow user and group if they don't exist
 RUN groupadd -g 999 airflow || true && \
