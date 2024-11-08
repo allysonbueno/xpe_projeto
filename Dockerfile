@@ -25,6 +25,7 @@ USER root
 RUN chmod -R 755 /opt/airflow/dags
 RUN chmod -R 755 /opt/airflow/logs
 RUN chmod -R 755 /opt/airflow/plugins
+RUN chmod -R 755 /opt/airflow/scheduler
 
 # Create the airflow user and group if they don't exist
 RUN groupadd -g 999 airflow || true && \
