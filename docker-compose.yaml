@@ -1,3 +1,4 @@
+version: '3.8'
 x-airflow-common:
   &airflow-common
   environment:
@@ -10,8 +11,6 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
-    AIRFLOW__SMTP__SMTP_USER: 'abcde12312321@gmail.com'
-    AIRFLOW__SMTP__SMTP_PASSWORD: 'abcde12312321'
   volumes:
     - ./dags:/opt/airflow/dags
     - ./config:/opt/airflow/config
@@ -35,7 +34,6 @@ services:
       POSTGRES_DB: airflow
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
-      - ./config/pg_hba.conf:/etc/postgresql/pg_hba.conf
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 5s
@@ -45,7 +43,7 @@ services:
   redis:
     image: redis:latest
     expose:
-      - "6379"
+      - 6379:6379
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s

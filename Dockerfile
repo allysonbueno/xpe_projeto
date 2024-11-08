@@ -1,41 +1,45 @@
-# Use the official Apache Airflow image as base
-FROM apache/airflow:2.10.0-python3.9
+# Start from the official Python 3.12 slim image
+FROM apache/airflow:2.10.0
 
-# Set environment variables
-ENV AIRFLOW_HOME=/opt/airflow
-ENV AIRFLOW_UID=50000
-ENV PYTHON_VERSION=3.9
+# Set the owner label
+LABEL owner="allyson"
 
-# Copy requirements file
-COPY config/requirements.txt .
+# Copy DAGs, plugins, logs, and configuration files
+COPY dags /opt/airflow/dags
+COPY plugins /opt/airflow/plugins
+COPY logs /opt/airflow/logs
+COPY config/airflow.cfg /opt/airflow/airflow.cfg
+COPY config/requirements.txt /opt/airflow/requirements.txt
+COPY config/gspread/gspread /home/airflow/.local/lib/python3.8/site-packages/gspread
+COPY config/gspread/gspread-5.10.0.dist-info /home/airflow/.local/lib/python3.8/site-packages/gspread-5.10.0.dist-info
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r /opt/airflow/requirements.txt
+RUN pip install apache-airflow-providers-postgres
 
-# Ensure the necessary directories exist and have the correct permissions
-RUN mkdir -p $AIRFLOW_HOME/logs/scheduler && \
-    mkdir -p $AIRFLOW_HOME/logs/webserver && \
-    mkdir -p $AIRFLOW_HOME/dags && \
-    mkdir -p $AIRFLOW_HOME/plugins && \
-    chown -R ${AIRFLOW_UID}:0 $AIRFLOW_HOME/logs && \
-    chown -R ${AIRFLOW_UID}:0 $AIRFLOW_HOME/dags && \
-    chown -R ${AIRFLOW_UID}:0 $AIRFLOW_HOME/plugins
 
-# Set working directory
-WORKDIR $AIRFLOW_HOME
+USER root
+RUN sudo pip install supabase
+RUN sudo apt-get update
+# RUN sudo apt-get install vim
 
-# Switch to airflow user to avoid running as root
-USER ${AIRFLOW_UID}:0
+# Set permissions on DAGs directory (replace * with actual subdirectories if needed)
+RUN chmod -R 755 /opt/airflow/dags
 
-# Expose necessary ports for webserver and flower (as per your docker-compose.yml setup)
-EXPOSE 5000 5555
+# Create the airflow user and group if they don't exist
+RUN groupadd -g 999 airflow || true && \
+    useradd -r -u 999 -g airflow airflow || true
 
-# Copy the DAGs and configuration files (optional)
-COPY dags/ $AIRFLOW_HOME/dags/
-COPY config/airflow.cfg $AIRFLOW_HOME/airflow.cfg
-COPY config/pg_hba.conf /etc/postgresql/pg_hba.conf
+# Debugging: Check if the user and group were created successfully
+RUN id airflow
 
-# Set entrypoint for airflow to start required services like webserver, scheduler, or worker
-ENTRYPOINT ["bash", "-c"]
+# Ensure the installed binaries are available for the airflow user
+RUN mkdir -p /home/airflow/.cache/ms-playwright && \
+    chown -R 999:999 /home/airflow/.cache/ms-playwright
 
-# The command will be passed by docker-compose (e.g., 'webserver', 'scheduler', etc.)
+# Initialize Airflow database
+RUN airflow db init
+
+# Set the default user to airflow
+USER airflow
