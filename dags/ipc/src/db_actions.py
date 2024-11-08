@@ -7,8 +7,8 @@ class SupaBase:
     def __init__(self):
         self.supabase_url    = DATA_BASE_CONFIG["database"]["supabase_url"]
         self.supabase_key    = DATA_BASE_CONFIG["database"]["supabase_pwd"]
-        self.supabase: Client = create_client(self.supabase_url, self.supabase_key)
-
+        self.supabase: Client = create_client(self.supabase_url, self.supabase_key)       
+        
     # Executar comando no SupaBase para enviar comandos sql:
     # CREATE OR REPLACE FUNCTION execute_sql(query TEXT)
     #     RETURNS VOID AS $$
